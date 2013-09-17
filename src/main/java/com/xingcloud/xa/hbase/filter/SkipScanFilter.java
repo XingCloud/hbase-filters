@@ -1,6 +1,7 @@
 package com.xingcloud.xa.hbase.filter;
 
 import com.xingcloud.xa.hbase.model.KeyRange;
+import com.xingcloud.xa.uidmapping.UidMappingUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.KeyValue;
@@ -23,12 +24,13 @@ import java.util.List;
 public class SkipScanFilter extends FilterBase {
   private static Log LOG = LogFactory.getLog(SkipScanFilter.class);
 
-  //需要skip的各个key range
   private List<KeyRange> slot;
-  //是否全部scan结束
   private boolean isDone;
-  //scan到的当前key range在slot中的位置
   private int position;
+
+  public SkipScanFilter() {
+    super();
+  }
 
   public SkipScanFilter(List<KeyRange> slot) {
     init(slot);
@@ -65,14 +67,13 @@ public class SkipScanFilter extends FilterBase {
         break;
       }
     }
-    //start key 大于 最大的key range的end key
     if (position >= slot.size()) {
       isDone = true;
       return ReturnCode.NEXT_ROW;
     }
     if (slot.get(position).compareLowerToUpperBound(currentKey, offset, length) <= 0) { //当前kv属于此key range
       return ReturnCode.INCLUDE;
-    } else {  //当前kv小于此key range的start key，seek到最接近此key range的start key
+    } else {
       return ReturnCode.SEEK_NEXT_USING_HINT;
     }
   }
@@ -88,11 +89,20 @@ public class SkipScanFilter extends FilterBase {
   @Override
   public void readFields(DataInput in) throws IOException {
     int slotSize = in.readInt();
-    slot = new ArrayList<>(slotSize);
+    slot = new ArrayList<KeyRange>(slotSize);
     for (int i=0; i<slotSize; i++) {
       KeyRange range = new KeyRange();
       range.readFields(in);
       slot.add(range);
     }
+  }
+
+  public static void main(String[] args) {
+    int[] uids = {237, 39, 103, 263};
+    for (int i=0; i<uids.length; i++) {
+      long uid = UidMappingUtil.getInstance().decorateWithMD5(uids[i]);
+      System.out.println(Bytes.toStringBinary(Bytes.toBytes(uid)));
+    }
+
   }
 }
