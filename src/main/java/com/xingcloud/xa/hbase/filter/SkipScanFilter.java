@@ -128,8 +128,8 @@ public class SkipScanFilter extends FilterBase {
     }
     if (uidRange != null) {
       out.writeBoolean(true);
-      out.writeLong(Bytes.toLong(uidRange.getFirst()));
-      out.writeLong(Bytes.toLong(uidRange.getSecond()));
+      out.write(uidRange.getFirst());
+      out.write(uidRange.getSecond());
     } else {
       out.writeBoolean(false);
     }
@@ -146,9 +146,11 @@ public class SkipScanFilter extends FilterBase {
     }
     boolean hasUidRange = in.readBoolean();
     if (hasUidRange) {
-      long suid = in.readLong();
-      long euid = in.readLong();
-      this.uidRange = new Pair<byte[], byte[]>(Bytes.toBytes(suid), Bytes.toBytes(euid));
+      byte[] suid = new byte[5];
+      byte[] euid = new byte[5];
+      in.readFully(suid);
+      in.readFully(euid);
+      this.uidRange = new Pair<byte[], byte[]>(suid, euid);
     }
   }
 
