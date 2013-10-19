@@ -103,11 +103,11 @@ public class SkipScanFilter extends FilterBase {
       //当前kv属于此key range
       if (uidRange != null) {
         //判断是否在指定的uid范围内
-        if (Bytes.compareTo(currentKey, offset+length-5, length, uidRange.getFirst(), 0, uidRange.getFirst().length) < 0) {
+        if (Bytes.compareTo(currentKey, offset+length-5, 5, uidRange.getFirst(), 0, 5) < 0) {
           //如果当前uid小于指定的起始uid，则跳到当前事件的指定起始uid位置
           skipType = SkipType.SkipToUidStart;
           return ReturnCode.SEEK_NEXT_USING_HINT;
-        } else if (Bytes.compareTo(currentKey, offset-5, length, uidRange.getSecond(), 0, uidRange.getSecond().length) > 0) {
+        } else if (Bytes.compareTo(currentKey, offset+length-5, 5, uidRange.getSecond(), 0, 5) > 0) {
           //如果当前uid大于指定的结束uid，则跳到当前事件可能的最大uid位置（实际上会跳到下一事件的起始uid位置）
           skipType = SkipType.SkipToUidEnd;
           return ReturnCode.SEEK_NEXT_USING_HINT;
